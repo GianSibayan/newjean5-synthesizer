@@ -28,12 +28,12 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding:22px 18px 30px;
+    padding:64px 18px 12px;
   }
   header{
     width:100%;max-width:760px;position:relative;
     display:flex;flex-direction:column;align-items:center;
-    padding:6px 90px 4px;
+    padding:10px 130px 4px;
     text-align:center;
   }
   header h1{
@@ -41,13 +41,12 @@
   }
   header .by{margin:2px 0 0;font-size:0.85rem;opacity:0.6;}
   .corner-icon{
-    position:absolute;top:-6px;width:70px;height:auto;
+    position:absolute;top:-20px;width:108px;height:auto;
     cursor:default;user-select:none;pointer-events:none;
     transition:transform 0.15s ease-out;
-    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));
   }
   .corner-icon-wrap{
-    position:absolute;top:-14px;width:96px;height:96px;
+    position:absolute;top:-28px;width:140px;height:140px;
     display:flex;align-items:center;justify-content:center;
     pointer-events:auto;
   }
@@ -55,7 +54,7 @@
   .corner-icon-wrap.right{right:0;}
   .corner-icon-wrap img{max-width:100%;max-height:100%;pointer-events:none;}
 
-  main{width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:14px;}
+  main{width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:10px;}
 
   #stage{
     position:relative;width:100%;aspect-ratio:16/10;
@@ -66,7 +65,8 @@
     display:flex;align-items:center;justify-content:center;
   }
   #idle-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
-  #idle-wrap img{max-width:55%;max-height:60%;object-fit:contain;}
+  #idle-wrap img{max-width:62%;max-height:65%;object-fit:contain;}
+  #idle-missing{display:none;font-size:0.72rem;opacity:0.4;max-width:70%;text-align:center;}
   #idle-msg{font-size:0.95rem;letter-spacing:0.02em;text-align:center;opacity:0.5;}
   #stage video{display:none;}
   #stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
@@ -113,7 +113,8 @@
 <main>
   <div id="stage">
     <div id="idle-wrap">
-      <img src="cat.png" alt="">
+      <img id="idle-cat" src="cat.jpg" alt="" onerror="this.style.display='none'; document.getElementById('idle-missing').style.display='block';">
+      <div id="idle-missing">cat.png didn't load — check the exact filename/capitalization in your repo (GitHub Pages is case-sensitive)</div>
       <div id="idle-msg">press letsgo to start</div>
     </div>
     <video id="video" autoplay playsinline muted></video>
