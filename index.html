@@ -65,7 +65,7 @@
     display:flex;align-items:center;justify-content:center;
   }
   #idle-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
-  #idle-wrap img{max-width:62%;max-height:65%;object-fit:contain;}
+  #idle-wrap img{max-width:220px;max-height:180px;width:auto;height:auto;object-fit:contain;}
   #idle-missing{display:none;font-size:0.72rem;opacity:0.4;max-width:70%;text-align:center;}
   #idle-msg{font-size:0.95rem;letter-spacing:0.02em;text-align:center;opacity:0.5;}
   #stage video{display:none;}
@@ -114,7 +114,7 @@
   <div id="stage">
     <div id="idle-wrap">
       <img id="idle-cat" src="cat.jpg" alt="" onerror="this.style.display='none'; document.getElementById('idle-missing').style.display='block';">
-      <div id="idle-missing">cat.png didn't load — check the exact filename/capitalization in your repo (GitHub Pages is case-sensitive)</div>
+      <div id="idle-missing">cat.jpg didn't load — check the exact filename/capitalization in your repo (GitHub Pages is case-sensitive)</div>
       <div id="idle-msg">press letsgo to start</div>
     </div>
     <video id="video" autoplay playsinline muted></video>
