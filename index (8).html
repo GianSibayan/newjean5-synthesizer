@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>New Jean5 Synthesizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#efe9d8;
+    --line:#dcd4bd;
+    --ink:#2c2b3a;
+    --pill:#3a3950;
+    --pill-ink:#f3f1e8;
+    --dot:#ff2d2d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Zen Kurenaido',sans-serif;
+    color:var(--ink);
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0/28px 28px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/28px 28px,
+      var(--paper);
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:22px 18px 30px;
+  }
+  header{
+    width:100%;max-width:760px;position:relative;
+    display:flex;flex-direction:column;align-items:center;
+    padding:6px 90px 4px;
+    text-align:center;
+  }
+  header h1{
+    margin:0;font-weight:400;font-size:2rem;letter-spacing:0.02em;
+  }
+  header .by{margin:2px 0 0;font-size:0.85rem;opacity:0.6;}
+  .corner-icon{
+    position:absolute;top:-6px;width:70px;height:auto;
+    cursor:default;user-select:none;pointer-events:none;
+    transition:transform 0.15s ease-out;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+  }
+  .corner-icon-wrap{
+    position:absolute;top:-14px;width:96px;height:96px;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:auto;
+  }
+  .corner-icon-wrap.left{left:0;}
+  .corner-icon-wrap.right{right:0;}
+  .corner-icon-wrap img{max-width:100%;max-height:100%;pointer-events:none;}
+
+  main{width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center;gap:16px;margin-top:14px;}
+
+  #stage{
+    position:relative;width:100%;aspect-ratio:16/10;
+    background:#fff;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #idle-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  #idle-wrap img{max-width:55%;max-height:60%;object-fit:contain;}
+  #idle-msg{font-size:0.95rem;letter-spacing:0.02em;text-align:center;opacity:0.5;}
+  #stage video{display:none;}
+  #stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  #rec-indicator{
+    position:absolute;top:12px;right:12px;width:12px;height:12px;border-radius:50%;
+    background:#ff2d2d;display:none;box-shadow:0 0 0 4px rgba(255,45,45,0.25);
+  }
+
+  #rec-download{
+    position:absolute;bottom:10px;left:10px;right:10px;display:none;
+    background:var(--pill);color:var(--pill-ink);text-decoration:none;
+    padding:9px 14px;border-radius:999px;font-size:0.82rem;text-align:center;
+  }
+
+  .controls{width:100%;display:flex;gap:10px;align-items:center;}
+  #sentence-input{
+    flex:1;min-width:0;padding:13px 16px;border-radius:999px;border:2px solid var(--ink);
+    background:transparent;color:var(--ink);font-family:'Zen Kurenaido',sans-serif;
+    font-size:0.92rem;outline:none;
+  }
+  #sentence-input::placeholder{color:var(--ink);opacity:0.55;}
+  #letsgo-btn, .icon-btn{
+    border:none;border-radius:999px;background:var(--pill);color:var(--pill-ink);
+    cursor:pointer;font-family:'Zen Kurenaido',sans-serif;flex-shrink:0;
+  }
+  #letsgo-btn{padding:13px 20px;font-size:0.92rem;}
+  #letsgo-btn:disabled{opacity:0.5;}
+  .icon-btn{width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;}
+  .icon-btn svg{width:20px;height:20px;}
+  .icon-btn:active{transform:scale(0.94);}
+  #word-count{font-size:0.75rem;opacity:0.55;text-align:center;}
+  #error-msg{font-size:0.8rem;color:#b3352f;text-align:center;min-height:1.1em;max-width:600px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="corner-icon-wrap left" id="icon1-wrap"><img src="pic1.png" class="corner-icon" id="icon1" alt=""></div>
+  <h1>New Jean5&nbsp;&nbsp;Synthesizer</h1>
+  <p class="by">by: @euginini06_</p>
+  <div class="corner-icon-wrap right" id="icon2-wrap"><img src="pic2.png" class="corner-icon" id="icon2" alt=""></div>
+</header>
+
+<main>
+  <div id="stage">
+    <div id="idle-wrap">
+      <img src="cat.png" alt="">
+      <div id="idle-msg">press letsgo to start</div>
+    </div>
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+    <div id="rec-indicator"></div>
+    <a id="rec-download" download="finger-words-video.webm">video ready — tap to download</a>
+  </div>
+
+  <div class="controls">
+    <input id="sentence-input" maxlength="90" placeholder="type here (8 words max)" autocomplete="off">
+    <button id="letsgo-btn">letsgo</button>
+    <button class="icon-btn" id="camera-btn" title="tap to record, tap again to stop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 8h2.2l1.2-2h9.2l1.2 2H20a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
+        <circle cx="12" cy="14" r="3.6"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="fullscreen-btn" title="fullscreen">⛶</button>
+  </div>
+  <div id="word-count">0 / 8 words</div>
+  <div id="error-msg"></div>
+</main>
+
+<script type="module">
+import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const stage = document.getElementById('stage');
+const idleMsg = document.getElementById('idle-wrap');
+const recIndicator = document.getElementById('rec-indicator');
+const input = document.getElementById('sentence-input');
+const wordCount = document.getElementById('word-count');
+const letsgoBtn = document.getElementById('letsgo-btn');
+const errorMsg = document.getElementById('error-msg');
+const cameraBtn = document.getElementById('camera-btn');
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+const recDownload = document.getElementById('rec-download');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const HELVETICA_ITALIC = "italic 26px 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const TIP_IDS = [8,12,16,20];
+const PIP_IDS = [6,10,14,18];
+const THUMB_TIP = 4;
+const PINCH_ON = 0.09;
+const PINCH_OFF = 0.13;
+const SMOOTH = 0.55; // higher = smoother/laggier, lower = snappier/jitterier
+const LABEL_COLORS = ['#ff2d78','#00a8c9','#7c4dff','#1fa34a','#2979ff','#ff9100','#d4a300','#ff5252'];
+
+let smoothed = {}; // key "hand-landmarkId" -> {x,y}
+
+let words = [];
+let slotMeta = [];
+let landmarker = null;
+let stream = null;
+let rafId = null;
+let pinchState = {};
+let dpr = Math.max(1, window.devicePixelRatio || 1);
+
+// ---------- word input ----------
+function updateWordCount(){
+  const w = input.value.trim().split(/\s+/).filter(Boolean);
+  wordCount.textContent = `${Math.min(w.length,8)} / 8 words${w.length>8 ? ' (using first 8)' : ''}`;
+}
+input.addEventListener('input', updateWordCount);
+
+// ---------- voices: US female + US male only, cycled girl/boy across all 8 fingers ----------
+let fourVoices = [null, null];
+let voicesReadyResolve;
+const voicesReady = new Promise(res => { voicesReadyResolve = res; });
+
+function pickVoice(voices, lang, genderHints){
+  const byLang = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(lang));
+  const hit = byLang.find(v => genderHints.some(h => v.name.toLowerCase().includes(h)));
+  return hit || byLang[0] || null;
+}
+function buildVoiceBank(){
+  const voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  if (!voices.length) return false;
+  const femaleHints = ['female','samantha','zira','aria','susan','kate','serena','hazel','emma','joanna','salli','fiona'];
+  const maleHints = ['male','daniel','david','george','fred','alex','guy','ryan','arthur'];
+  fourVoices[0] = pickVoice(voices, 'en-us', femaleHints);
+  fourVoices[1] = pickVoice(voices, 'en-us', maleHints);
+  // graceful fallback if either is missing on this device
+  const anyEn = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+  fourVoices = fourVoices.map((v,i) => v || anyEn[i % Math.max(anyEn.length,1)] || voices[0] || null);
+  return true;
+}
+function ensureVoicesLoaded(){
+  if (!window.speechSynthesis) { voicesReadyResolve(); return; }
+  if (buildVoiceBank()){ voicesReadyResolve(); return; }
+  window.speechSynthesis.onvoiceschanged = () => { if (buildVoiceBank()) voicesReadyResolve(); };
+  setTimeout(() => { buildVoiceBank(); voicesReadyResolve(); }, 1200); // don't block forever on odd browsers
+}
+ensureVoicesLoaded();
+
+function speak(word, slotIdx){
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  const voiceSlot = slotIdx % 2; // 0,1,0,1... = girl, boy, girl, boy across the 8 fingers
+  const v = fourVoices[voiceSlot];
+  if (v) u.voice = v;
+  u.pitch = voiceSlot === 0 ? 1.1 : 0.95;
+  u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+
+// ---------- hover budge on corner icons ----------
+function attachBudge(wrapId){
+  const wrap = document.getElementById(wrapId);
+  const img = wrap.querySelector('img');
+  const MAX = 7;
+  wrap.style.pointerEvents = 'auto';
+  wrap.addEventListener('mousemove', (e)=>{
+    const r = wrap.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    let dx = (e.clientX - cx)/(r.width/2);
+    let dy = (e.clientY - cy)/(r.height/2);
+    dx = Math.max(-1,Math.min(1,dx)) * MAX;
+    dy = Math.max(-1,Math.min(1,dy)) * MAX;
+    img.style.transform = `translate(${dx}px,${dy}px)`;
+  });
+  wrap.addEventListener('mouseleave', ()=>{ img.style.transform = 'translate(0,0)'; });
+}
+attachBudge('icon1-wrap');
+attachBudge('icon2-wrap');
+
+function applyWords(){
+  const raw = input.value.trim().split(/\s+/).filter(Boolean).slice(0,8);
+  if (raw.length === 0){
+    errorMsg.textContent = "type at least one word first";
+    return false;
+  }
+  words = raw;
+  slotMeta = words.map((_,i)=>({ color: LABEL_COLORS[i % LABEL_COLORS.length] }));
+  pinchState = {};
+  errorMsg.textContent = '';
+  return true;
+}
+
+// ---------- start ----------
+let started = false;
+letsgoBtn.addEventListener('click', async () => {
+  if (started){ applyWords(); return; } // already running — just swap the words live, no re-permission
+
+  if (!applyWords()) return;
+  letsgoBtn.disabled = true;
+  letsgoBtn.textContent = 'loading…';
+
+  try{
+    const [micStream] = await Promise.all([
+      navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false }),
+      voicesReady
+    ]);
+    stream = micStream;
+  }catch(err){
+    letsgoBtn.disabled = false;
+    letsgoBtn.textContent = 'letsgo';
+    errorMsg.textContent = "couldn't get camera access — this usually needs the page hosted on a real https link (GitHub Pages / Hugging Face) rather than a preview panel.";
+    return;
+  }
+  video.srcObject = stream;
+  await video.play();
+
+  try{
+    const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    landmarker = await HandLandmarker.createFromOptions(vision, {
+      baseOptions:{
+        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        delegate:"GPU"
+      },
+      numHands:2, runningMode:"VIDEO"
+    });
+  }catch(err){
+    letsgoBtn.disabled = false;
+    letsgoBtn.textContent = 'letsgo';
+    errorMsg.textContent = "hand tracking model failed to load — check your connection and try again.";
+    return;
+  }
+
+  idleMsg.style.display = 'none';
+  letsgoBtn.textContent = 'update';
+  letsgoBtn.disabled = false;
+  started = true;
+  sizeCanvas();
+  window.addEventListener('resize', sizeCanvas);
+  loop();
+});
+
+function sizeCanvas(){
+  const r = stage.getBoundingClientRect();
+  canvas.style.width = r.width+'px';
+  canvas.style.height = r.height+'px';
+  canvas.width = Math.round(r.width*dpr);
+  canvas.height = Math.round(r.height*dpr);
+}
+
+function loop(){
+  rafId = requestAnimationFrame(loop);
+  if (video.readyState < 2) return;
+  const result = landmarker.detectForVideo(video, performance.now());
+  render(result);
+}
+
+// draws video "cover"-cropped into canvas, mirrored; returns mapping fn
+function coverParams(dw, dh){
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const vAR = vw/vh, dAR = dw/dh;
+  let sx,sy,sw,sh;
+  if (vAR > dAR){ sh = vh; sw = vh*dAR; sx = (vw-sw)/2; sy = 0; }
+  else { sw = vw; sh = vw/dAR; sx = 0; sy = (vh-sh)/2; }
+  return {sx,sy,sw,sh};
+}
+
+function render(result){
+  const dw = canvas.width/dpr, dh = canvas.height/dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,dw,dh);
+
+  const cp = coverParams(dw,dh);
+  ctx.save();
+  ctx.translate(dw,0); ctx.scale(-1,1);
+  ctx.drawImage(video, cp.sx,cp.sy,cp.sw,cp.sh, 0,0, dw,dh);
+  ctx.restore();
+
+  const toCanvas = (nx, ny) => {
+    const px = ((nx*video.videoWidth) - cp.sx)/cp.sw * dw;
+    const py = ((ny*video.videoHeight) - cp.sy)/cp.sh * dh;
+    return [dw - px, py]; // mirrored x
+  };
+
+  const sm = (label, id, raw) => {
+    const key = label+'-'+id;
+    const prev = smoothed[key];
+    const nx = prev ? prev.x*SMOOTH + raw.x*(1-SMOOTH) : raw.x;
+    const ny = prev ? prev.y*SMOOTH + raw.y*(1-SMOOTH) : raw.y;
+    smoothed[key] = {x:nx, y:ny};
+    return {x:nx, y:ny};
+  };
+
+  const hands = result.handednesses || [];
+  const count = result.landmarks ? result.landmarks.length : 0;
+
+  for (let h=0; h<count; h++){
+    const lm = result.landmarks[h];
+    const label = hands[h] && hands[h][0] ? hands[h][0].categoryName : (h===0?'Left':'Right');
+    const baseSlot = label === 'Left' ? 0 : 4;
+    const thumb = sm(label, THUMB_TIP, lm[THUMB_TIP]);
+    const [tx,ty] = toCanvas(thumb.x, thumb.y);
+
+    // thumb dot — red too, round
+    ctx.beginPath(); ctx.arc(tx,ty,8,0,Math.PI*2);
+    ctx.fillStyle = '#ff2d2d'; ctx.fill();
+
+    TIP_IDS.forEach((tipId, fi)=>{
+      const tip = sm(label, tipId, lm[tipId]);
+      const pip = sm(label, PIP_IDS[fi], lm[PIP_IDS[fi]]);
+      const [px,py] = toCanvas(tip.x, tip.y);
+      const [ppx,ppy] = toCanvas(pip.x, pip.y);
+
+      ctx.beginPath(); ctx.arc(px,py,9,0,Math.PI*2);
+      ctx.fillStyle = '#ff2d2d';
+      ctx.fill();
+
+      const slotIdx = baseSlot+fi;
+      const word = words[slotIdx];
+      if (word){
+        const dx = px-ppx, dy = py-ppy;
+        const len = Math.hypot(dx,dy)||1;
+        const lx = px + (dx/len)*44, ly = py + (dy/len)*44;
+        ctx.font = HELVETICA_ITALIC;
+        ctx.fillStyle = slotMeta[slotIdx].color;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(word, lx, ly);
+      }
+
+      const dist = Math.hypot(lm[tipId].x-lm[THUMB_TIP].x, lm[tipId].y-lm[THUMB_TIP].y);
+      const key = h+'-'+fi;
+      const pinched = pinchState[key] || false;
+      if (!pinched && dist < PINCH_ON && word){
+        pinchState[key] = true;
+        speak(word, slotIdx);
+        ctx.beginPath(); ctx.arc(px,py,20,0,Math.PI*2);
+        ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=3; ctx.stroke();
+      } else if (pinched && dist > PINCH_OFF){
+        pinchState[key] = false;
+      }
+    });
+  }
+
+  recIndicator.style.display = isRecording ? 'block' : 'none';
+}
+
+// ---------- camera icon: tap to start recording, tap again to stop ----------
+// silent, canvas-only capture (camera feed + dots + words) — identical on phone and laptop
+let isRecording = false;
+let mediaRecorder = null;
+let chunks = [];
+const canRecord = !!(canvas.captureStream && window.MediaRecorder);
+if (!canRecord){ cameraBtn.disabled = true; cameraBtn.title = 'recording not supported on this browser'; }
+
+cameraBtn.addEventListener('click', ()=>{
+  if (!landmarker || !canRecord) return;
+  if (isRecording){ stopRecording(); } else { startRecording(); }
+});
+
+function startRecording(){
+  isRecording = true;
+  cameraBtn.style.background = '#b3352f';
+  recDownload.style.display = 'none';
+  chunks = [];
+  const stream2 = canvas.captureStream(30);
+  mediaRecorder = new MediaRecorder(stream2, { mimeType: 'video/webm' });
+  mediaRecorder.ondataavailable = (e)=>{ if (e.data.size>0) chunks.push(e.data); };
+  mediaRecorder.onstop = ()=>{
+    const blob = new Blob(chunks, {type:'video/webm'});
+    const url = URL.createObjectURL(blob);
+    recDownload.href = url;
+    recDownload.style.display = 'block';
+    recDownload.onclick = ()=> setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  };
+  mediaRecorder.start();
+}
+function stopRecording(){
+  isRecording = false;
+  cameraBtn.style.background = '';
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+}
+
+// ---------- fullscreen ----------
+fullscreenBtn.addEventListener('click', ()=>{
+  if (stage.requestFullscreen) stage.requestFullscreen();
+  else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+});
+</script>
+</body>
+</html>
